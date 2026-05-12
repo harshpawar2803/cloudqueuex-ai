@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: CloudQueueX AI MVP Infrastructure
+
+Parameters:
+
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Select existing EC2 KeyPair
+
+Resources:
+
+  # =========================
+  # SECURITY GROUP
+  # =========================
+
+  TicketSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH and Flask App
+
+      SecurityGroupIngress:
+
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: 0.0.0.0/0
+
+  # =========================
+  # IAM ROLE
+  # =========================
+
+  TicketEC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+
+        Statement:
+          - Effect: Allow
+
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+
+            Action:
+              - sts:AssumeRole
+
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+
+  TicketInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref TicketEC2Role
+
+  # =========================
+  # SQS QUEUE
+  # =========================
+
+  TicketQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: ticket-queue
+
+  # =========================
+  # SNS TOPIC
+  # =========================
+
+  TicketSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: ticket-alert-topic
+
+  # =========================
+  # EC2 INSTANCE
+  # =========================
+
+  TicketEC2:
+    Type: AWS::EC2::Instance
+
+    Properties:
+
+      InstanceType: t2.micro
+
+      ImageId: ami-0c02fb55956c7d316
+
+      KeyName: !Ref KeyPairName
+
+      IamInstanceProfile: !Ref TicketInstanceProfile
+
+      SecurityGroupIds:
+        - !Ref TicketSecurityGroup
+
+      Tags:
+        - Key: Name
+          Value: CloudQueueX-AI
+
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          yum install python3 -y
+          pip3 install flask boto3
+
+Outputs:
+
+  EC2PublicIP:
+    Description: EC2 Public IP
+    Value: !GetAtt TicketEC2.PublicIp
+
+  QueueURL:
+    Description: SQS Queue URL
+    Value: !Ref TicketQueue
+
+  SNSTopicARN:
+    Description: SNS Topic ARN
+    Value: !Ref TicketSNSTopic
