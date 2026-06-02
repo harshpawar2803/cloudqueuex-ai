@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Track Ticket</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="ticket-form">
+
+        <h2>🔍 Track Ticket</h2>
+
+        <form action="/track" method="POST">
+
+            <input type="text" name="ticket_id" placeholder="Enter Ticket ID" required>
+
+            <button type="submit">
+                Search Ticket
+            </button>
+
+        </form>
+
+    </div>
+
+</body>
+
+</html>

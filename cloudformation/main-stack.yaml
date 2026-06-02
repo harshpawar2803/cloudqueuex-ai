@@ -1,23 +1,29 @@
 AWSTemplateFormatVersion: '2010-09-09'
 
-Description: CloudQueueX AI MVP Infrastructure
+Description: CloudQueueX AI v3.1 - Event Driven Ticket Processing Platform
 
 Parameters:
 
   KeyPairName:
     Type: AWS::EC2::KeyPair::KeyName
-    Description: Select existing EC2 KeyPair
+    Description: Select existing EC2 Key Pair
+
+  NotificationEmail:
+    Type: String
+    Description: Email address for SNS notifications
 
 Resources:
 
-  # =========================
+  # ==========================================
   # SECURITY GROUP
-  # =========================
+  # ==========================================
 
   TicketSecurityGroup:
     Type: AWS::EC2::SecurityGroup
+
     Properties:
-      GroupDescription: Allow SSH and Flask App
+
+      GroupDescription: Allow SSH and Flask Access
 
       SecurityGroupIngress:
 
@@ -31,17 +37,21 @@ Resources:
           ToPort: 5000
           CidrIp: 0.0.0.0/0
 
-  # =========================
+  # ==========================================
   # IAM ROLE
-  # =========================
+  # ==========================================
 
   TicketEC2Role:
     Type: AWS::IAM::Role
+
     Properties:
+
       AssumeRolePolicyDocument:
+
         Version: '2012-10-17'
 
         Statement:
+
           - Effect: Allow
 
             Principal:
@@ -52,36 +62,88 @@ Resources:
               - sts:AssumeRole
 
       ManagedPolicyArns:
+
         - arn:aws:iam::aws:policy/AmazonSQSFullAccess
         - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
 
   TicketInstanceProfile:
     Type: AWS::IAM::InstanceProfile
+
     Properties:
+
       Roles:
         - !Ref TicketEC2Role
 
-  # =========================
+  # ==========================================
   # SQS QUEUE
-  # =========================
+  # ==========================================
 
   TicketQueue:
     Type: AWS::SQS::Queue
+
     Properties:
+
       QueueName: ticket-queue
 
-  # =========================
+      VisibilityTimeout: 60
+
+  # ==========================================
   # SNS TOPIC
-  # =========================
+  # ==========================================
 
   TicketSNSTopic:
     Type: AWS::SNS::Topic
+
     Properties:
+
       TopicName: ticket-alert-topic
 
-  # =========================
+      Subscription:
+
+        - Protocol: email
+          Endpoint: !Ref NotificationEmail
+
+  # ==========================================
+  # DYNAMODB TABLE
+  # ==========================================
+
+  TicketsTable:
+    Type: AWS::DynamoDB::Table
+
+    Properties:
+
+      TableName: Tickets
+
+      BillingMode: PAY_PER_REQUEST
+
+      AttributeDefinitions:
+
+        - AttributeName: ticket_id
+          AttributeType: S
+
+      KeySchema:
+
+        - AttributeName: ticket_id
+          KeyType: HASH
+
+  # ==========================================
+  # CLOUDWATCH LOG GROUP
+  # ==========================================
+
+  TicketLogGroup:
+    Type: AWS::Logs::LogGroup
+
+    Properties:
+
+      LogGroupName: CloudQueueXLogs
+
+      RetentionInDays: 7
+
+  # ==========================================
   # EC2 INSTANCE
-  # =========================
+  # ==========================================
 
   TicketEC2:
     Type: AWS::EC2::Instance
@@ -90,7 +152,7 @@ Resources:
 
       InstanceType: t2.micro
 
-      ImageId: ami-0c02fb55956c7d316
+      ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
 
       KeyName: !Ref KeyPairName
 
@@ -100,26 +162,53 @@ Resources:
         - !Ref TicketSecurityGroup
 
       Tags:
+
         - Key: Name
           Value: CloudQueueX-AI
+
+        - Key: Project
+          Value: CloudQueueX-AI
+
+        - Key: Environment
+          Value: Development
 
       UserData:
         Fn::Base64: |
           #!/bin/bash
-          yum update -y
-          yum install python3 -y
+
+          dnf update -y
+
+          dnf install python3 git -y
+
           pip3 install flask boto3
+
+          mkdir -p /opt/cloudqueuex
+
+          echo "CloudQueueX AI Ready" > /opt/cloudqueuex/status.txt
 
 Outputs:
 
   EC2PublicIP:
     Description: EC2 Public IP
+
     Value: !GetAtt TicketEC2.PublicIp
 
   QueueURL:
     Description: SQS Queue URL
+
     Value: !Ref TicketQueue
 
   SNSTopicARN:
     Description: SNS Topic ARN
+
     Value: !Ref TicketSNSTopic
+
+  DynamoDBTable:
+    Description: DynamoDB Table Name
+
+    Value: !Ref TicketsTable
+
+  CloudWatchLogGroup:
+    Description: CloudWatch Log Group
+
+    Value: !Ref TicketLogGroup

@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template
 import boto3
 import json
 import uuid
@@ -530,10 +530,40 @@ html = """
 # HOME PAGE
 # =========================================
 
+
+
 @app.route('/')
 def home():
+    return render_template('index.html')
 
-    return render_template_string(html)
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+
+@app.route('/search')
+def search():
+    return render_template('search.html')
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
+
+@app.route('/ticket-demo')
+def ticket_demo():
+
+    return render_template(
+        'ticket_details.html',
+        ticket_id='TKT-1001',
+        status='OPEN',
+        category='Infrastructure',
+        priority='HIGH',
+        summary='Linux server disk usage exceeded threshold'
+    )
+
+
 
 # =========================================
 # ARCHITECTURE PAGE

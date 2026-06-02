@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Ticket Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="ticket-form">
+
+        <h2>🎫 Ticket Details</h2>
+
+        <p><b>Ticket ID:</b> {{ ticket_id }}</p>
+
+        <p><b>Status:</b> {{ status }}</p>
+
+        <p><b>Category:</b> {{ category }}</p>
+
+        <p><b>Priority:</b> {{ priority }}</p>
+
+        <p><b>Summary:</b> {{ summary }}</p>
+
+    </div>
+
+</body>
+
+</html>
