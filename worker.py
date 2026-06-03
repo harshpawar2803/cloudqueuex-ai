@@ -2,13 +2,6 @@ import boto3
 import json
 import time
 import uuid
-import openai
-
-# =========================================
-# OPENAI API CONFIGURATION
-# =========================================
-
-openai.api_key = ""
 
 # =========================================
 # AWS CLIENTS
@@ -44,47 +37,52 @@ TOPIC_ARN = 'arn:aws:sns:us-east-1:686849057833:ticket-alert-topic'
 
 def analyze_ticket(issue):
 
-    try:
+    issue_lower = issue.lower()
 
-        response = openai.ChatCompletion.create(
+    category = "General"
+    priority = "Medium"
+    recommended_team = "Support"
 
-            model="gpt-3.5-turbo",
+    if any(word in issue_lower for word in
+           ["server", "linux", "disk", "cpu", "memory", "ec2"]):
 
-            messages=[
+        category = "Infrastructure"
+        priority = "High"
+        recommended_team = "Infrastructure"
 
-                {
-                    "role": "system",
+    elif any(word in issue_lower for word in
+             ["network", "dns", "vpn", "latency"]):
 
-                    "content": """
+        category = "Networking"
+        priority = "High"
+        recommended_team = "Networking"
 
-You are an intelligent AI support assistant.
+    elif any(word in issue_lower for word in
+             ["jenkins", "pipeline", "docker",
+              "kubernetes", "deployment", "cicd"]):
 
-Analyze support tickets and provide:
+        category = "DevOps"
+        priority = "High"
+        recommended_team = "DevOps"
 
-1. Ticket Category
-2. Priority Level
-3. Recommended Support Team
-4. Short Summary
+    elif any(word in issue_lower for word in
+             ["security", "iam", "access", "authentication"]):
 
-Return response in clean professional format.
+        category = "Security"
+        priority = "Critical"
+        recommended_team = "Security"
 
+    summary = issue[:150]
+
+    return f"""
+Category: {category}
+
+Priority: {priority}
+
+Recommended Team: {recommended_team}
+
+Summary: {summary}
 """
-                },
-
-                {
-                    "role": "user",
-                    "content": issue
-                }
-
-            ]
-
-        )
-
-        return response['choices'][0]['message']['content']
-
-    except Exception as e:
-
-        return f"AI Analysis Failed: {str(e)}"
 
 # =========================================
 # WORKER START
@@ -103,9 +101,7 @@ while True:
     response = sqs.receive_message(
 
         QueueUrl=QUEUE_URL,
-
         MaxNumberOfMessages=1,
-
         WaitTimeSeconds=5
 
     )
@@ -118,20 +114,12 @@ while True:
 
             body = json.loads(message['Body'])
 
-            # =========================================
-            # TICKET DETAILS
-            # =========================================
-
             ticket_id = body.get('ticket_id', str(uuid.uuid4()))
-
             name = body.get('name', 'Unknown')
-
             email = body.get('email', 'N/A')
-
             team = body.get('team', 'General')
-
+            subject = body.get('subject', 'No Subject')
             issue = body.get('issue', 'No Issue Provided')
-
             timestamp = body.get('timestamp', 'N/A')
 
             print("\n====================================")
@@ -142,15 +130,12 @@ while True:
             print("Name      :", name)
             print("Email     :", email)
             print("Team      :", team)
+            print("Subject   :", subject)
             print("Timestamp :", timestamp)
 
             print("\n📝 Issue Description")
             print("------------------------------------")
             print(issue)
-
-            # =========================================
-            # OPENAI ANALYSIS
-            # =========================================
 
             print("\n🤖 Running AI Analysis...")
 
@@ -159,7 +144,6 @@ while True:
             print("\n====================================")
             print("🤖 AI ANALYSIS RESULT")
             print("====================================")
-
             print(ai_result)
 
             # =========================================
@@ -171,19 +155,13 @@ while True:
                 Item={
 
                     'ticket_id': ticket_id,
-
                     'name': name,
-
                     'email': email,
-
                     'team': team,
-
+                    'subject': subject,
                     'issue': issue,
-
                     'timestamp': timestamp,
-
                     'status': 'OPEN',
-
                     'ai_analysis': ai_result
 
                 }
@@ -200,7 +178,7 @@ while True:
 
                 TopicArn=TOPIC_ARN,
 
-                Subject='🚀 CloudQueueX AI - New Ticket Created',
+                Subject='CloudQueueX AI - New Ticket Created',
 
                 Message=f"""
 
@@ -211,13 +189,10 @@ CloudQueueX AI Notification
 New Support Ticket Received
 
 Ticket ID : {ticket_id}
-
 Name      : {name}
-
 Email     : {email}
-
 Team      : {team}
-
+Subject   : {subject}
 Timestamp : {timestamp}
 
 ====================================
@@ -249,13 +224,11 @@ AWS Event-Driven Ticket Processing Platform
             sqs.delete_message(
 
                 QueueUrl=QUEUE_URL,
-
                 ReceiptHandle=message['ReceiptHandle']
 
             )
 
             print("🗑 Message Deleted From SQS")
-
             print("====================================")
 
     else:
