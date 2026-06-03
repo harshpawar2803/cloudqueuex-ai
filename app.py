@@ -2,10 +2,11 @@ from flask import Flask, request, render_template, redirect
 import boto3
 import json
 import uuid
-from datetime import datetime
 import os
+from datetime import datetime
+from dotenv import load_dotenv
 
-os.system("git restore .")
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -15,7 +16,7 @@ app = Flask(__name__)
 
 sqs = boto3.client('sqs', region_name='us-east-1')
 
-QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/686849057833/ticket-queue'
+QUEUE_URL = os.environ.get('QUEUE_URL', 'https://sqs.us-east-1.amazonaws.com/686849057833/ticket-queue')
 
 # =========================================
 # MAIN DASHBOARD UI
@@ -365,13 +366,15 @@ html = """
 
         <div class="nav-links">
 
-            <a href="/">Dashboard</a>
+            <a href="/">Home</a>
+
+            <a href="/search">Track Ticket</a>
+
+            <a href="/login">Login</a>
+
+            <a href="/dashboard">Dashboard</a>
 
             <a href="/architecture">Architecture</a>
-
-            <a href="/services">AWS Services</a>
-
-            <a href="/support">Support</a>
 
         </div>
 
@@ -536,7 +539,7 @@ html = """
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return html
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -545,7 +548,20 @@ def login():
     if request.method == 'POST':
 
         username = request.form.get('username')
+        password = request.form.get('password')
         role = request.form.get('role')
+
+        # Simple authentication (replace with real DB/LDAP in production)
+        VALID_USERS = {
+            'admin': 'CloudQueueX@123',
+            'operator01': 'CloudQueueX@123',
+            'operator02': 'CloudQueueX@123',
+            'operator03': 'CloudQueueX@123',
+            'engineer': 'CloudQueueX@123'
+        }
+
+        if username not in VALID_USERS or VALID_USERS[username] != password:
+            return render_template('login.html', error='Invalid username or password')
 
         print(f"User Login: {username}")
         print(f"Role: {role}")
@@ -567,6 +583,40 @@ def login():
 @app.route('/search')
 def search():
     return render_template('search.html')
+
+
+@app.route('/track', methods=['POST'])
+def track_ticket():
+    ticket_id = request.form.get('ticket_id', '')
+    
+    try:
+        # Query DynamoDB for ticket
+        dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+        table = dynamodb.Table('Tickets')
+        
+        response = table.get_item(Key={'ticket_id': ticket_id})
+        
+        if 'Item' in response:
+            ticket = response['Item']
+            return render_template(
+                'ticket_details.html',
+                ticket_id=ticket.get('ticket_id', 'N/A'),
+                status=ticket.get('status', 'UNKNOWN'),
+                category='Infrastructure',
+                priority='HIGH',
+                summary=ticket.get('subject', 'N/A'),
+                name=ticket.get('name', 'N/A'),
+                email=ticket.get('email', 'N/A'),
+                team=ticket.get('team', 'N/A'),
+                issue=ticket.get('issue', 'N/A'),
+                ai_analysis=ticket.get('ai_analysis', 'No analysis yet')
+            )
+        else:
+            return render_template('search.html', error=f'Ticket {ticket_id} not found')
+    
+    except Exception as e:
+        print(f"Error tracking ticket: {str(e)}")
+        return render_template('search.html', error=f'Error: {str(e)}')
 
 
 @app.route('/dashboard')
@@ -792,85 +842,99 @@ def support():
 @app.route('/submit', methods=['POST'])
 def submit():
 
-    ticket_id = str(uuid.uuid4())
+    try:
+        ticket_id = str(uuid.uuid4())
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    name = request.form['name']
+        name = request.form['name']
 
-    email = request.form['email']
+        email = request.form['email']
 
-    team = request.form['team']
+        team = request.form['team']
 
-    subject = request.form['subject']
+        subject = request.form['subject']
 
-    issue = request.form['issue']
+        issue = request.form['issue']
 
-    # SEND MESSAGE TO SQS
+        # SEND MESSAGE TO SQS
 
-    sqs.send_message(
+        sqs.send_message(
 
-        QueueUrl=QUEUE_URL,
+            QueueUrl=QUEUE_URL,
 
-        MessageBody=json.dumps({
+            MessageBody=json.dumps({
 
-            'ticket_id': ticket_id,
+                'ticket_id': ticket_id,
 
-            'name': name,
+                'name': name,
 
-            'email': email,
+                'email': email,
 
-            'team': team,
+                'team': team,
 
-            'subject': subject,
+                'subject': subject,
 
-            'issue': issue,
+                'issue': issue,
 
-            'timestamp': timestamp
+                'timestamp': timestamp
 
-        })
+            })
 
-    )
+        )
 
-    return f"""
+        return f"""
 
-    <body style="background:#0f172a;color:white;font-family:Arial;text-align:center;padding-top:80px;">
+        <body style="background:#0f172a;color:white;font-family:Arial;text-align:center;padding-top:80px;">
 
-        <h1>✅ Ticket Submitted Successfully</h1>
+            <h1>✅ Ticket Submitted Successfully</h1>
 
-        <br>
+            <br>
 
-        <h2>🎫 Ticket ID</h2>
+            <h2>🎫 Ticket ID</h2>
 
-        <p style="font-size:24px;color:#38bdf8;">{ticket_id}</p>
+            <p style="font-size:24px;color:#38bdf8;">{ticket_id}</p>
 
-        <br>
+            <br>
 
-        <h3>Name: {name}</h3>
+            <h3>Name: {name}</h3>
 
-        <h3>Email: {email}</h3>
+            <h3>Email: {email}</h3>
 
-        <h3>Team: {team}</h3>
+            <h3>Team: {team}</h3>
 
-        <h3>Subject: {subject}</h3>
+            <h3>Subject: {subject}</h3>
 
-        <h3>Timestamp: {timestamp}</h3>
+            <h3>Timestamp: {timestamp}</h3>
 
-        <br>
+            <br>
 
-        <p style="font-size:18px;">
-            Ticket successfully pushed to AWS SQS Queue 🚀
-        </p>
+            <p style="font-size:18px;">
+                Ticket successfully pushed to AWS SQS Queue 🚀
+            </p>
 
-        <br><br>
+            <br><br>
 
-        <a href="/" style="color:#38bdf8;font-size:20px;text-decoration:none;">
-            ← Back to Dashboard
-        </a>
+            <a href="/" style="color:#38bdf8;font-size:20px;text-decoration:none;">
+                ← Back to Dashboard
+            </a>
 
-    </body>
+        </body>
 
-    """
+        """
+    
+    except Exception as e:
+        print(f"Error submitting ticket: {str(e)}")
+        return f"""
+        <body style="background:#0f172a;color:white;font-family:Arial;text-align:center;padding-top:80px;">
+            <h1>❌ Error Submitting Ticket</h1>
+            <p style="color:#ef4444;font-size:18px;">{str(e)}</p>
+            <br>
+            <a href="/" style="color:#38bdf8;font-size:20px;text-decoration:none;">
+                ← Back to Dashboard
+            </a>
+        </body>
+        """, 500
 
 # =========================================
 # RUN APPLICATION
