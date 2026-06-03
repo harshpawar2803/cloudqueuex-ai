@@ -1,10 +1,19 @@
+#!/usr/bin/env python3
+"""
+CloudQueueX AI - Background Worker Service
+Processes tickets from SQS queue, stores in DynamoDB, sends SNS notifications
+"""
+
 import boto3
 import json
 import time
-import uuid
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # =========================================
-# AWS CLIENTS
+# AWS CLIENT INITIALIZATION
 # =========================================
 
 sqs = boto3.client('sqs', region_name='us-east-1')
@@ -14,225 +23,190 @@ dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
 sns = boto3.client('sns', region_name='us-east-1')
 
 # =========================================
-# DYNAMODB TABLE
+# ENVIRONMENT VARIABLES
 # =========================================
 
-table = dynamodb.Table('Tickets')
+QUEUE_URL = os.environ.get('QUEUE_URL', 'https://sqs.us-east-1.amazonaws.com/686849057833/ticket-queue')
+
+TOPIC_ARN = os.environ.get('TOPIC_ARN', 'arn:aws:sns:us-east-1:686849057833:ticket-alert-topic')
 
 # =========================================
-# SQS QUEUE URL
+# WORKER FUNCTION
 # =========================================
 
-QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/686849057833/ticket-queue'
+def process_ticket(message_body):
 
-# =========================================
-# SNS TOPIC ARN
-# =========================================
+    """Process a ticket message from SQS"""
 
+    try:
+        ticket_data = json.loads(message_body)
 
-TOPIC_ARN = 'arn:aws:sns:us-east-1:686849057833:ticket-alert-topic'
-# =========================================
-# AI ANALYSIS FUNCTION
-# =========================================
+        ticket_id = ticket_data.get('ticket_id')
 
-def analyze_ticket(issue):
+        name = ticket_data.get('name')
 
-    issue_lower = issue.lower()
+        email = ticket_data.get('email')
 
-    category = "General"
-    priority = "Medium"
-    recommended_team = "Support"
+        team = ticket_data.get('team')
 
-    if any(word in issue_lower for word in
-           ["server", "linux", "disk", "cpu", "memory", "ec2"]):
+        subject = ticket_data.get('subject')
 
-        category = "Infrastructure"
-        priority = "High"
-        recommended_team = "Infrastructure"
+        issue = ticket_data.get('issue')
 
-    elif any(word in issue_lower for word in
-             ["network", "dns", "vpn", "latency"]):
+        timestamp = ticket_data.get('timestamp')
 
-        category = "Networking"
-        priority = "High"
-        recommended_team = "Networking"
+        print(f"Processing ticket: {ticket_id}")
 
-    elif any(word in issue_lower for word in
-             ["jenkins", "pipeline", "docker",
-              "kubernetes", "deployment", "cicd"]):
+        # ===== STORE IN DYNAMODB =====
 
-        category = "DevOps"
-        priority = "High"
-        recommended_team = "DevOps"
+        table = dynamodb.Table('Tickets')
 
-    elif any(word in issue_lower for word in
-             ["security", "iam", "access", "authentication"]):
+        ai_analysis = f"Ticket from {name} in {team} team regarding: {subject}"
 
-        category = "Security"
-        priority = "Critical"
-        recommended_team = "Security"
-
-    summary = issue[:150]
-
-    return f"""
-Category: {category}
-
-Priority: {priority}
-
-Recommended Team: {recommended_team}
-
-Summary: {summary}
-"""
-
-# =========================================
-# WORKER START
-# =========================================
-
-print("====================================")
-print("🚀 CloudQueueX AI Worker Started")
-print("====================================")
-
-# =========================================
-# MAIN LOOP
-# =========================================
-
-while True:
-
-    response = sqs.receive_message(
-
-        QueueUrl=QUEUE_URL,
-        MaxNumberOfMessages=1,
-        WaitTimeSeconds=5
-
-    )
-
-    messages = response.get('Messages', [])
-
-    if messages:
-
-        for message in messages:
-
-            body = json.loads(message['Body'])
-
-            ticket_id = body.get('ticket_id', str(uuid.uuid4()))
-            name = body.get('name', 'Unknown')
-            email = body.get('email', 'N/A')
-            team = body.get('team', 'General')
-            subject = body.get('subject', 'No Subject')
-            issue = body.get('issue', 'No Issue Provided')
-            timestamp = body.get('timestamp', 'N/A')
-
-            print("\n====================================")
-            print("🎫 NEW SUPPORT TICKET")
-            print("====================================")
-
-            print("Ticket ID :", ticket_id)
-            print("Name      :", name)
-            print("Email     :", email)
-            print("Team      :", team)
-            print("Subject   :", subject)
-            print("Timestamp :", timestamp)
-
-            print("\n📝 Issue Description")
-            print("------------------------------------")
-            print(issue)
-
-            print("\n🤖 Running AI Analysis...")
-
-            ai_result = analyze_ticket(issue)
-
-            print("\n====================================")
-            print("🤖 AI ANALYSIS RESULT")
-            print("====================================")
-            print(ai_result)
-
-            # =========================================
-            # STORE IN DYNAMODB
-            # =========================================
-
+        try:
             table.put_item(
 
                 Item={
 
                     'ticket_id': ticket_id,
+
                     'name': name,
+
                     'email': email,
+
                     'team': team,
+
                     'subject': subject,
+
                     'issue': issue,
+
                     'timestamp': timestamp,
+
                     'status': 'OPEN',
-                    'ai_analysis': ai_result
+
+                    'ai_analysis': ai_analysis
 
                 }
 
             )
 
-            print("\n✅ Ticket Stored in DynamoDB")
+            print(f"✅ Ticket stored in DynamoDB: {ticket_id}")
 
-            # =========================================
-            # SNS EMAIL ALERT
-            # =========================================
+        except Exception as e:
+            print(f"❌ DynamoDB Error: {str(e)}")
+            raise
 
+        # ===== SEND EMAIL NOTIFICATION =====
+
+        try:
             sns.publish(
 
                 TopicArn=TOPIC_ARN,
 
-                Subject='CloudQueueX AI - New Ticket Created',
+                Subject=f"New Support Ticket: {subject}",
 
                 Message=f"""
+New ticket received from {name}:
 
-CloudQueueX AI Notification
+Team: {team}
+Subject: {subject}
+Status: OPEN
+Ticket ID: {ticket_id}
 
-====================================
-
-New Support Ticket Received
-
-Ticket ID : {ticket_id}
-Name      : {name}
-Email     : {email}
-Team      : {team}
-Subject   : {subject}
-Timestamp : {timestamp}
-
-====================================
-
-Issue Description
-
+Issue Details:
 {issue}
 
-====================================
+AI Analysis:
+{ai_analysis}
 
-AI Analysis
-
-{ai_result}
-
-====================================
-
-AWS Event-Driven Ticket Processing Platform
-
-"""
+Click to view ticket details.
+                """
 
             )
 
-            print("📧 SNS Email Notification Sent")
+            print(f"✅ Email notification sent: {email}")
 
-            # =========================================
-            # DELETE MESSAGE FROM SQS
-            # =========================================
+        except Exception as e:
+            print(f"❌ SNS Error: {str(e)}")
+            raise
 
-            sqs.delete_message(
+    except Exception as e:
+        print(f"❌ Error processing ticket: {str(e)}")
+        raise
+
+
+def main_worker_loop():
+
+    """Main worker loop - continuously poll SQS"""
+
+    print("====================================")
+    print("🚀 CloudQueueX AI Worker Started")
+    print("====================================")
+
+    print(f"Queue URL: {QUEUE_URL}")
+
+    print(f"Topic ARN: {TOPIC_ARN}\n")
+
+    while True:
+
+        try:
+            # RECEIVE MESSAGES FROM SQS
+
+            response = sqs.receive_message(
 
                 QueueUrl=QUEUE_URL,
-                ReceiptHandle=message['ReceiptHandle']
+
+                MaxNumberOfMessages=10,
+
+                WaitTimeSeconds=20
 
             )
 
-            print("🗑 Message Deleted From SQS")
-            print("====================================")
+            # ===== PROCESS MESSAGES =====
 
-    else:
+            if 'Messages' in response:
 
-        print("⏳ Waiting for new support tickets...")
+                for message in response['Messages']:
 
-    time.sleep(5)
+                    try:
+                        # PROCESS TICKET
+
+                        process_ticket(message['Body'])
+
+                        # DELETE MESSAGE FROM QUEUE
+
+                        try:
+                            sqs.delete_message(
+
+                                QueueUrl=QUEUE_URL,
+
+                                ReceiptHandle=message['ReceiptHandle']
+
+                            )
+
+                            print(f"✅ Message deleted from queue\n")
+
+                        except Exception as e:
+                            print(f"❌ Error deleting message: {str(e)}\n")
+
+                    except Exception as e:
+                        print(f"❌ Error processing message: {str(e)}\n")
+                        # Message will return to queue after visibility timeout
+
+            else:
+
+                print("No messages in queue, waiting...\n")
+
+        except Exception as e:
+            print(f"❌ Error in main loop: {str(e)}")
+            print("Retrying in 10 seconds...\n")
+            time.sleep(10)
+
+
+# =========================================
+# RUN WORKER
+# =========================================
+
+if __name__ == '__main__':
+
+    main_worker_loop()
