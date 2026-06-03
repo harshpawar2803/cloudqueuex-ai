@@ -29,8 +29,8 @@ QUEUE_URL = 'https://sqs.us-east-1.amazonaws.com/686849057833/ticket-queue'
 # SNS TOPIC ARN
 # =========================================
 
-TOPIC_ARN = 'arn:aws:sns:us-east-1:686849057833:ticket-alert-topic'
 
+TOPIC_ARN = 'arn:aws:sns:us-east-1:686849057833:ticket-alert-topic'
 # =========================================
 # AI ANALYSIS FUNCTION
 # =========================================

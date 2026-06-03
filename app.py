@@ -1,8 +1,11 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, redirect
 import boto3
 import json
 import uuid
 from datetime import datetime
+import os
+
+os.system("git restore .")
 
 app = Flask(__name__)
 
@@ -362,15 +365,13 @@ html = """
 
         <div class="nav-links">
 
-            <a href="/">Home</a>
-
-            <a href="/search">Track Ticket</a>
-
-            <a href="/login">Login</a>
-
-            <a href="/dashboard">Dashboard</a>
+            <a href="/">Dashboard</a>
 
             <a href="/architecture">Architecture</a>
+
+            <a href="/services">AWS Services</a>
+
+            <a href="/support">Support</a>
 
         </div>
 
@@ -535,7 +536,7 @@ html = """
 
 @app.route('/')
 def home():
-    return html
+    return render_template('index.html')
 
 
 @app.route('/login', methods=['GET', 'POST'])
