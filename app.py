@@ -597,44 +597,43 @@ def register():
 
     return redirect('/login')
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
     if request.method == 'POST':
 
-        username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
-        role = request.form.get('role')
 
-        # Simple authentication (replace with real DB/LDAP in production)
-        VALID_USERS = {
-            'admin': 'CloudQueueX@123',
-            'operator01': 'CloudQueueX@123',
-            'operator02': 'CloudQueueX@123',
-            'operator03': 'CloudQueueX@123',
-            'engineer': 'CloudQueueX@123'
-        }
+        response = users_table.get_item(
+            Key={'email': email}
+        )
 
-        if username not in VALID_USERS or VALID_USERS[username] != password:
-            return render_template('login.html', error='Invalid username or password')
+        if 'Item' not in response:
+            return render_template(
+                'login.html',
+                error='User not found'
+            )
 
-        print(f"User Login: {username}")
-        print(f"Role: {role}")
+        user = response['Item']
 
-        if role == "admin":
-            return redirect('/dashboard')
+        if not check_password_hash(
+            user['password_hash'],
+            password
+        ):
+            return render_template(
+                'login.html',
+                error='Invalid password'
+            )
 
-        elif role == "engineer":
-            return redirect('/search')
+        session['email'] = user['email']
+        session['role'] = user.get('role', 'User')
 
-        elif role == "user":
-            return redirect('/')
+        print(f"Login Success: {email}")
 
-        return redirect('/')
+        return redirect('/dashboard')
 
     return render_template('login.html')
-
 
 @app.route('/search')
 def search():
@@ -677,7 +676,22 @@ def track_ticket():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+
+    if 'email' not in session:
+        return redirect('/login')
+
+    return render_template(
+        'dashboard.html',
+        email=session['email'],
+        role=session['role']
+    )
+
+@app.route('/logout')
+def logout():
+
+    session.clear()
+
+    return redirect('/login')
 
 
 @app.route('/ticket-demo')
