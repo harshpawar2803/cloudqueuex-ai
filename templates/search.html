@@ -1,53 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+    <title>Track Ticket - CloudQueueX AI</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudQueueX - Search Incident</title>
-    <!-- Custom Style Sheet -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 60px;
+            background: #111827;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 60px auto;
+            background: #111827;
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #1f2937;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #1e293b;
+            color: white;
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(to right, #0ea5e9, #2563eb);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.92;
+        }
+
+        .error {
+            background: #7f1d1d;
+            color: #fecaca;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #dc2626;
+        }
+
+        a {
+            color: #38bdf8;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- App Navigation Header -->
-    <nav class="app-navbar">
-        <a href="/" class="navbar-brand">
-            ☁️ CloudQueue<span>X AI</span>
-        </a>
-        <div class="navbar-links">
-            <a href="/">Home</a>
-            <a href="/search" class="active">Track Ticket</a>
-            <a href="/login">Login</a>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/architecture">Architecture</a>
-        </div>
-    </nav>
+    <div class="navbar">
+        <div class="logo">☁️ CloudQueueX AI</div>
+        <a href="/" style="color: #38bdf8;">← Home</a>
+    </div>
 
-    <!-- Center Search Container -->
-    <div class="auth-wrapper">
-        <div class="auth-card" style="max-width: 500px;">
-            
-            <div class="auth-card-header">
-                <h2>🔍 Track Incident status</h2>
-                <p>Lookup active ticket metadata from SQS/DynamoDB registry</p>
-            </div>
-            
-            <form action="/track" method="POST">
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <label for="ticket_id">Incident Ticket ID</label>
-                    <input type="text" id="ticket_id" name="ticket_id" class="form-control" placeholder="Enter Ticket ID (e.g. TKT-1001)..." required>
-                </div>
-                
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">
-                    Search Operations Database
-                </button>
-            </form>
-            
-            <a href="/" class="back-link" style="display: flex; justify-content: center; margin-top: 20px;">
-                ← Back to Portal
-            </a>
-            
-        </div>
+    <div class="container">
+        <h2>🔍 Track Your Ticket</h2>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/track">
+            <label>Enter Ticket ID</label>
+            <input type="text" name="ticket_id" placeholder="e.g., a1b2c3d4-5678..." required>
+            <button type="submit">Search Ticket</button>
+        </form>
+
+        <a href="/">← Back to Home</a>
     </div>
 
 </body>
