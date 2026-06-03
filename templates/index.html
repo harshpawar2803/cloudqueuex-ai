@@ -1,76 +1,204 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudQueueX AI</title>
-
+    <title>CloudQueueX AI - Cloud Operations Console</title>
+    <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+    <style>
+        .split-layout {
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 40px;
+            align-items: start;
+            margin-top: 20px;
+        }
+        
+        .info-panel {
+            padding-right: 20px;
+        }
 
+        .step-list {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 16px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .step-item:hover {
+            background: rgba(255, 153, 0, 0.03);
+            border-color: rgba(255, 153, 0, 0.1);
+        }
+
+        .step-num {
+            background: linear-gradient(135deg, var(--primary) 0%, #f97316 100%);
+            color: #ffffff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+            box-shadow: 0 0 10px rgba(255, 153, 0, 0.2);
+        }
+
+        .step-content h4 {
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 992px) {
+            .split-layout {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .info-panel {
+                padding-right: 0;
+            }
+        }
+    </style>
+</head>
 <body>
 
-    <nav>
-
-        <div class="logo">
-            ☁️ CloudQueueX AI
-        </div>
-
-        <div class="menu">
-            <a href="/">Home</a>
+    <!-- Professional App Navigation -->
+    <nav class="app-navbar">
+        <a href="/" class="navbar-brand">
+            ☁️ CloudQueue<span>X AI</span>
+        </a>
+        <div class="navbar-links">
+            <a href="/" class="active">Home</a>
             <a href="/search">Track Ticket</a>
             <a href="/login">Login</a>
             <a href="/dashboard">Dashboard</a>
             <a href="/architecture">Architecture</a>
         </div>
-
     </nav>
 
-    <section class="hero">
+    <div class="container" style="max-width: 1250px;">
+        
+        <div class="split-layout">
+            
+            <!-- Left Column: Operations Overview & Details -->
+            <div class="info-panel">
+                <div class="hero-badge">
+                    <span>⚡</span> System Status: Operational
+                </div>
+                <h1 style="font-family: 'Outfit', sans-serif; font-size: 2.6rem; font-weight: 800; line-height: 1.2; margin-bottom: 16px; background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    Intelligent Event-Driven Triage Console
+                </h1>
+                <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.6;">
+                    CloudQueueX AI handles critical cloud failures, database incidents, and security warnings asynchronously using highly scalable AWS microservices.
+                </p>
 
-        <h1>CloudQueueX AI</h1>
+                <!-- Dynamic Step Pipeline Explanation -->
+                <div class="step-list">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-content">
+                            <h4>Submit Operational Incident</h4>
+                            <p>Operators report infrastructure crashes, CPU spikes, or load balancer failures with details and stack traces.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-content">
+                            <h4>Amazon SQS Asynchronous Dispatch</h4>
+                            <p>Incidents are dispatched as structured message payloads to an SQS queue to handle peak load spikes reliably.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-content">
+                            <h4>AI Engine Diagnosis & Classification</h4>
+                            <p>An intelligent worker processes logs via AI to extract keywords, rank priority, and determine target routing.</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">4</div>
+                        <div class="step-content">
+                            <h4>DynamoDB Storage & SNS Notifications</h4>
+                            <p>Case logs are indexed securely in DynamoDB tables, triggering instant operational notification emails.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Intake Form Glass Card -->
+            <div>
+                <div class="glass-card" style="margin-bottom: 0; padding: 32px 28px;">
+                    <h3 class="card-title" style="margin-bottom: 20px; font-size: 1.2rem;">
+                        <span>🎫</span> Log Support Case
+                    </h3>
+                    
+                    <form action="/submit" method="POST">
+                        <div style="display: flex; flex-direction: column; gap: 18px;">
+                            
+                            <div class="form-group">
+                                <label for="name">Reporter Full Name</label>
+                                <input type="text" id="name" name="name" class="form-control" placeholder="e.g. John Doe" required autocomplete="name">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Operator Email Address</label>
+                                <input type="email" id="email" name="email" class="form-control" placeholder="your.name@company.com" required autocomplete="email">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="team">Support Triage Queue</label>
+                                <select id="team" name="team" class="form-control" required>
+                                    <option value="" disabled selected>Select target team...</option>
+                                    <option value="Infrastructure">Infrastructure Operations</option>
+                                    <option value="Networking">Networking & CDN</option>
+                                    <option value="DevOps">DevOps & Deployments</option>
+                                    <option value="Security">Security & Access IAM</option>
+                                    <option value="Billing">Finance & Billing Control</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="subject">Incident Subject</label>
+                                <input type="text" id="subject" name="subject" class="form-control" placeholder="Short title of warning..." required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="issue">Incident Details / Trace Logs</label>
+                                <textarea id="issue" name="issue" class="form-control" style="height: 100px;" placeholder="Paste log outputs, console reports, or description..." required></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary" style="margin-top: 5px; width: 100%; padding: 12px; font-size: 0.95rem;">
+                                🚀 Dispatch SQS Message
+                            </button>
+                            
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
 
-        <p>
-            AI-Powered Event-Driven Ticket Processing Platform on AWS
-        </p>
-
-    </section>
-
-    <section class="ticket-form">
-
-        <h2>Create Support Ticket</h2>
-
-        <form action="/submit" method="POST">
-
-            <input type="text" name="name" placeholder="Full Name" required>
-
-            <input type="email" name="email" placeholder="Email Address" required>
-
-            <select name="team" required>
-
-                <option value="">Select Team</option>
-
-                <option>Infrastructure</option>
-                <option>Networking</option>
-                <option>DevOps</option>
-                <option>Security</option>
-                <option>Billing</option>
-
-            </select>
-
-            <input type="text" name="subject" placeholder="Ticket Subject" required>
-
-            <textarea name="issue" placeholder="Describe your issue" required></textarea>
-
-            <button type="submit">
-                Submit Ticket
-            </button>
-
-        </form>
-
-    </section>
+    </div>
 
 </body>
-
 </html>

@@ -1,29 +1,54 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Track Ticket</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudQueueX - Search Incident</title>
+    <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
 
-    <div class="ticket-form">
+    <!-- App Navigation Header -->
+    <nav class="app-navbar">
+        <a href="/" class="navbar-brand">
+            ☁️ CloudQueue<span>X AI</span>
+        </a>
+        <div class="navbar-links">
+            <a href="/">Home</a>
+            <a href="/search" class="active">Track Ticket</a>
+            <a href="/login">Login</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/architecture">Architecture</a>
+        </div>
+    </nav>
 
-        <h2>🔍 Track Ticket</h2>
-
-        <form action="/track" method="POST">
-
-            <input type="text" name="ticket_id" placeholder="Enter Ticket ID" required>
-
-            <button type="submit">
-                Search Ticket
-            </button>
-
-        </form>
-
+    <!-- Center Search Container -->
+    <div class="auth-wrapper">
+        <div class="auth-card" style="max-width: 500px;">
+            
+            <div class="auth-card-header">
+                <h2>🔍 Track Incident status</h2>
+                <p>Lookup active ticket metadata from SQS/DynamoDB registry</p>
+            </div>
+            
+            <form action="/track" method="POST">
+                <div class="form-group" style="margin-bottom: 24px;">
+                    <label for="ticket_id">Incident Ticket ID</label>
+                    <input type="text" id="ticket_id" name="ticket_id" class="form-control" placeholder="Enter Ticket ID (e.g. TKT-1001)..." required>
+                </div>
+                
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">
+                    Search Operations Database
+                </button>
+            </form>
+            
+            <a href="/" class="back-link" style="display: flex; justify-content: center; margin-top: 20px;">
+                ← Back to Portal
+            </a>
+            
+        </div>
     </div>
 
 </body>
-
 </html>

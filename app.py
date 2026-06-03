@@ -362,13 +362,15 @@ html = """
 
         <div class="nav-links">
 
-            <a href="/">Dashboard</a>
+            <a href="/">Home</a>
+
+            <a href="/search">Track Ticket</a>
+
+            <a href="/login">Login</a>
+
+            <a href="/dashboard">Dashboard</a>
 
             <a href="/architecture">Architecture</a>
-
-            <a href="/services">AWS Services</a>
-
-            <a href="/support">Support</a>
 
         </div>
 
@@ -531,20 +533,40 @@ html = """
 # =========================================
 
 
-
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return html
 
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+
+    if request.method == 'POST':
+
+        username = request.form.get('username')
+        role = request.form.get('role')
+
+        print(f"User Login: {username}")
+        print(f"Role: {role}")
+
+        if role == "admin":
+            return redirect('/dashboard')
+
+        elif role == "engineer":
+            return redirect('/search')
+
+        elif role == "user":
+            return redirect('/')
+
+        return redirect('/')
+
     return render_template('login.html')
 
 
 @app.route('/search')
 def search():
     return render_template('search.html')
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -562,7 +584,6 @@ def ticket_demo():
         priority='HIGH',
         summary='Linux server disk usage exceeded threshold'
     )
-
 
 
 # =========================================
@@ -856,4 +877,4 @@ def submit():
 
 if __name__ == '__main__':
 
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

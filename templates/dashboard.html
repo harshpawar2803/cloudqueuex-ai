@@ -1,45 +1,231 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudQueueX AI - Cloud Operations Dashboard</title>
+    <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- ApexCharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
-
 <body>
 
-    <div class="hero">
+    <!-- Professional Navbar -->
+    <nav class="app-navbar">
+        <a href="/" class="navbar-brand">
+            ☁️ CloudQueue<span>X AI</span>
+        </a>
+        <div class="navbar-links">
+            <a href="/">Home</a>
+            <a href="/search">Track Ticket</a>
+            <a href="/login">Login</a>
+            <a href="/dashboard" class="active">Dashboard</a>
+            <a href="/architecture">Architecture</a>
+        </div>
+    </nav>
 
-        <h1>📊 CloudQueueX Dashboard</h1>
+    <div class="container" style="max-width: 1400px; margin-top: 30px;">
+        
+        <!-- Live System Operational KPI Metrics Row -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-info">
+                    <span class="metric-label">Active Incidents</span>
+                    <span class="metric-value" id="count-open">12</span>
+                </div>
+                <div class="metric-icon-box total">🔥</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-info">
+                    <span class="metric-label">Assigned Tickets</span>
+                    <span class="metric-value" id="count-assigned">5</span>
+                </div>
+                <div class="metric-icon-box open">🛡️</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-info">
+                    <span class="metric-label">Resolved Operations</span>
+                    <span class="metric-value" id="count-resolved">25</span>
+                </div>
+                <div class="metric-icon-box resolved">✔️</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-info">
+                    <span class="metric-label">Console Operators</span>
+                    <span class="metric-value" id="count-operators">10</span>
+                </div>
+                <div class="metric-icon-box critical">👥</div>
+            </div>
+        </div>
 
-        <p>Ticket Monitoring & Analytics</p>
+        <!-- 2-Column Split: Operations Desk vs Live Linux Monitor -->
+        <div class="monitoring-grid" style="grid-template-columns: 1.2fr 1fr;">
+            
+            <!-- Left Side: Operations Desk -->
+            <div>
+                <!-- Ticket Board / Queue List Card -->
+                <div class="glass-card" style="padding: 24px;">
+                    <h3 class="card-title">📋 Active Incident Triage Queue</h3>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Priority</th>
+                                    <th>Category</th>
+                                    <th>Summary Description</th>
+                                    <th>Status</th>
+                                    <th>Assigned</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tickets-table-body">
+                                <!-- Populated dynamically by app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Simulation Tools -->
+                <div class="glass-card" style="padding: 24px;">
+                    <h3 class="card-title">⚙️ Incident Queue Simulator</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
+                        Add mock incident traffic to test message dispatch queue scalability and AI classification.
+                    </p>
+                    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                        <input type="number" id="generate-count" class="form-control" style="width: 80px; padding: 8px 12px; text-align: center;" value="10" min="1" max="50">
+                        <button class="btn-primary" id="btn-generate-tickets" style="padding: 10px 20px; font-size: 0.85rem;">
+                            Generate Load
+                        </button>
+                        <button class="btn-secondary" id="btn-reset-lab" style="padding: 10px 20px; font-size: 0.85rem;">
+                            Reset Board
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Operator Accounts Card -->
+                <div class="glass-card" style="padding: 24px;">
+                    <h3 class="card-title">🛡️ Active Operator Credentials</h3>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.8rem;">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Password</th>
+                                    <th>Name</th>
+                                    <th>Privilege Role</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>admin</td>
+                                    <td style="font-family: monospace; color: var(--primary);">CloudQueueX@123</td>
+                                    <td>Trainer Admin</td>
+                                    <td>admin</td>
+                                </tr>
+                                <tr>
+                                    <td>operator01</td>
+                                    <td style="font-family: monospace; color: var(--text-muted);">CloudQueueX@123</td>
+                                    <td>Operations Engineer</td>
+                                    <td>operator</td>
+                                </tr>
+                                <tr>
+                                    <td>operator02</td>
+                                    <td style="font-family: monospace; color: var(--text-muted);">CloudQueueX@123</td>
+                                    <td>Support Specialist</td>
+                                    <td>operator</td>
+                                </tr>
+                                <tr>
+                                    <td>operator03</td>
+                                    <td style="font-family: monospace; color: var(--text-muted);">CloudQueueX@123</td>
+                                    <td>Security Analyst</td>
+                                    <td>operator</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Live Linux System Monitoring Dashboard -->
+            <div>
+                <!-- Resource Charts -->
+                <div class="glass-card" style="padding: 24px;">
+                    <h3 class="card-title">📡 Live Resource Telemetry</h3>
+                    <div class="charts-container" style="grid-template-columns: 1fr; gap: 15px;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600;">CPU UTILIZATION (%)</div>
+                            <div id="chart-cpu" style="min-height: 180px;"></div>
+                        </div>
+                        <div style="border-top: 1px solid var(--border-subtle); padding-top: 15px;">
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600;">MEMORY ALLOCATION (%)</div>
+                            <div id="chart-mem" style="min-height: 180px;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active SSH Logins and Services Status -->
+                <div class="glass-card" style="padding: 24px;">
+                    <h3 class="card-title">🔌 Node Operator Sessions</h3>
+                    <div class="table-responsive">
+                        <table class="custom-table" style="font-size: 0.8rem; margin-bottom: 20px;">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>TTY</th>
+                                    <th>Login Time</th>
+                                    <th>Remote Host</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>root</td>
+                                    <td style="font-family: monospace;">sshd0</td>
+                                    <td>2026-06-03 10:15</td>
+                                    <td style="font-family: monospace; color: var(--info);">192.168.76.129</td>
+                                </tr>
+                                <tr>
+                                    <td>root</td>
+                                    <td style="font-family: monospace;">tty2</td>
+                                    <td>2026-06-03 10:17</td>
+                                    <td style="font-family: monospace; color: var(--text-muted);">local-console</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3 class="card-title" style="font-size: 1rem; border-top: 1px solid var(--border-subtle); padding-top: 20px; margin-bottom: 12px;">🛡️ Critical Service Daemon Status</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.8rem;">
+                        <div class="status-indicator">
+                            <span class="status-dot active"></span> NetworkManager.service
+                        </div>
+                        <div class="status-indicator">
+                            <span class="status-dot active"></span> crond.service
+                        </div>
+                        <div class="status-indicator">
+                            <span class="status-dot active"></span> firewalld.service
+                        </div>
+                        <div class="status-indicator">
+                            <span class="status-dot active"></span> sshd.service
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live System Terminal Log Console -->
+                <div class="glass-card" style="padding: 24px;">
+                    <h3 class="card-title" style="color: var(--warning);">📝 Daemon Warning & System Logs</h3>
+                    <div class="terminal-box" id="skynet-logs-terminal">
+                        <!-- Streamed dynamically in app.js -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
 
     </div>
 
-    <div class="stats">
-
-        <div class="stat-box">
-            <h2>Total</h2>
-            <p>Total Tickets</p>
-        </div>
-
-        <div class="stat-box">
-            <h2>Open</h2>
-            <p>Open Tickets</p>
-        </div>
-
-        <div class="stat-box">
-            <h2>High</h2>
-            <p>High Priority</p>
-        </div>
-
-        <div class="stat-box">
-            <h2>Resolved</h2>
-            <p>Resolved Tickets</p>
-        </div>
-
-    </div>
-
+    <!-- Interactive script -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
-
 </html>

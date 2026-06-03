@@ -1,29 +1,76 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Ticket Details</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudQueueX - Incident Details</title>
+    <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
 
-    <div class="ticket-form">
+    <!-- App Navigation Header -->
+    <nav class="app-navbar">
+        <a href="/" class="navbar-brand">
+            ☁️ CloudQueue<span>X AI</span>
+        </a>
+        <div class="navbar-links">
+            <a href="/">Home</a>
+            <a href="/search">Track Ticket</a>
+            <a href="/login">Login</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/architecture">Architecture</a>
+        </div>
+    </nav>
 
-        <h2>🎫 Ticket Details</h2>
+    <!-- Details card -->
+    <div class="auth-wrapper">
+        <div class="glass-card" style="width: 100%; max-width: 580px; padding: 40px;">
+            <h2 class="card-title">
+                <span>🎫</span> Incident Details Triage
+            </h2>
+            
+            <div class="skynet-details-grid" style="display: flex; flex-direction: column; gap: 18px; margin-bottom: 25px;">
+                <p style="font-size: 0.95rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; display: flex; justify-content: space-between;">
+                    <b style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Ticket ID:</b>
+                    <span style="font-family: monospace; color: var(--info); font-weight: 600;">{{ ticket_id }}</span>
+                </p>
+                
+                <p style="font-size: 0.95rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <b style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Incident Status:</b>
+                    <span class="status-indicator">
+                        <span class="status-dot {% if status.lower() == 'open' %}critical{% else %}active{% endif %}"></span>
+                        <span style="font-size: 0.8rem; text-transform: uppercase; font-weight: 600; color: #ffffff;">{{ status }}</span>
+                    </span>
+                </p>
+                
+                <p style="font-size: 0.95rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; display: flex; justify-content: space-between;">
+                    <b style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Cloud Category:</b>
+                    <span style="color: #ffffff; font-weight: 500;">{{ category }}</span>
+                </p>
+                
+                <p style="font-size: 0.95rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <b style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase;">Priority Rating:</b>
+                    {% set prio = priority.lower() %}
+                    <span class="prio-badge {% if prio == 'high' %}high{% elif prio == 'medium' %}medium{% else %}low{% endif %}">{{ priority }}</span>
+                </p>
+                
+                <div style="margin-top: 10px;">
+                    <b style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; display: block; margin-bottom: 8px;">Triage / Diagnosis Summary:</b>
+                    <div style="background-color: rgba(2, 6, 23, 0.6); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; color: #cbd5e1; font-size: 0.85rem; line-height: 1.6; font-family: 'Fira Code', monospace; min-height: 80px;">
+                        {{ summary }}
+                    </div>
+                </div>
+            </div>
 
-        <p><b>Ticket ID:</b> {{ ticket_id }}</p>
-
-        <p><b>Status:</b> {{ status }}</p>
-
-        <p><b>Category:</b> {{ category }}</p>
-
-        <p><b>Priority:</b> {{ priority }}</p>
-
-        <p><b>Summary:</b> {{ summary }}</p>
-
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 20px;">
+                <a href="/dashboard" class="back-link" style="margin-top: 0;">
+                    ← Back to Dashboard
+                </a>
+            </div>
+            
+        </div>
     </div>
 
 </body>
-
 </html>
