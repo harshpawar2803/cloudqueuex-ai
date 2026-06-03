@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CloudQueueX - Authentication</title>
-    <!-- Custom Style Sheet -->
+    <title>CloudQueueX - Login</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 
-    <!-- App Navigation Header -->
     <nav class="app-navbar">
         <a href="/" class="navbar-brand">
             ☁️ CloudQueue<span>X AI</span>
         </a>
+
         <div class="navbar-links">
             <a href="/">Home</a>
             <a href="/search">Track Ticket</a>
@@ -23,47 +23,80 @@
         </div>
     </nav>
 
-    <!-- Center Login Form Box -->
     <div class="auth-wrapper">
+
         <div class="auth-card">
-            
+
             <div class="auth-card-header">
-                <h2>Console Authentication</h2>
-                <p>Enter your operations credentials to begin</p>
+                <h2>User Login</h2>
+                <p>Sign in using your registered account</p>
             </div>
-            
+
+            {% if error %}
+            <div style="
+                background:#7f1d1d;
+                color:white;
+                padding:12px;
+                margin-bottom:15px;
+                border-radius:8px;
+                text-align:center;">
+                {{ error }}
+            </div>
+            {% endif %}
+
             <form action="/login" method="POST">
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="username">Operator Username</label>
-                    <input type="text" id="username" name="username" class="form-control" placeholder="admin or engineer..." required autocomplete="username">
+
+                <div class="form-group" style="margin-bottom:20px;">
+
+                    <label for="email">Email Address</label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-control"
+                        placeholder="Enter registered email"
+                        required>
+
                 </div>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label for="password">Security Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+
+                <div class="form-group" style="margin-bottom:20px;">
+
+                    <label for="password">Password</label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-control"
+                        placeholder="Enter password"
+                        required>
+
                 </div>
-                
-                <div class="form-group" style="margin-bottom: 24px;">
-                    <label for="role">Assigned Session Privilege</label>
-                    <select id="role" name="role" class="form-control" required>
-                        <option value="" disabled selected>Select session privilege...</option>
-                        <option value="user">User Portal Privilege</option>
-                        <option value="engineer">Support Engineer Privilege</option>
-                        <option value="admin">Administrator Dashboard Privilege</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">
-                    Sign In to Console
+
+                <button
+                    type="submit"
+                    class="btn-primary"
+                    style="width:100%;padding:12px;">
+
+                    Sign In
+
                 </button>
+
             </form>
-            
-            <div style="margin-top: 25px; font-size: 0.75rem; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border-subtle); padding-top: 15px; line-height: 1.5;">
-                Standard Console Roles:<br>
-                admin (Admin Dashboard) | engineer (Support search)
+
+            <div style="
+                margin-top:20px;
+                text-align:center;">
+
+                <a href="/signup">
+                    Create New Account
+                </a>
+
             </div>
-            
+
         </div>
+
     </div>
 
 </body>
