@@ -1,2 +1,6 @@
-Flask
-boto3
+Flask==3.0.0
+boto3==1.28.85
+botocore==1.31.85
+jinja2==3.1.2
+werkzeug==3.0.1
+python-dotenv==1.0.0
