@@ -128,6 +128,30 @@ Resources:
         - AttributeName: ticket_id
           KeyType: HASH
 
+
+  # ==========================================
+  # DYNAMODB USERS TABLE
+  # ==========================================
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+
+    Properties:
+
+      TableName: Users
+
+      BillingMode: PAY_PER_REQUEST
+
+      AttributeDefinitions:
+
+        - AttributeName: email
+          AttributeType: S
+
+      KeySchema:
+
+        - AttributeName: email
+          KeyType: HASH
+
   # ==========================================
   # CLOUDWATCH LOG GROUP
   # ==========================================
@@ -207,6 +231,11 @@ Outputs:
     Description: DynamoDB Table Name
 
     Value: !Ref TicketsTable
+  
+  DynamoDBUsersTable:
+    Description: DynamoDB Users Table Name
+
+    Value: !Ref UsersTable
 
   CloudWatchLogGroup:
     Description: CloudWatch Log Group

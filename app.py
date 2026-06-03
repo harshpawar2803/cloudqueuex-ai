@@ -1,3 +1,5 @@
+from flask import session
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, request, render_template, redirect
 import boto3
 import json
@@ -10,6 +12,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
+app.secret_key = "cloudqueuex-secret-key"
+
 # =========================================
 # AWS SQS CONFIGURATION
 # =========================================
@@ -18,6 +22,19 @@ sqs = boto3.client('sqs', region_name='us-east-1')
 
 QUEUE_URL = os.environ.get('QUEUE_URL', 'https://sqs.us-east-1.amazonaws.com/686849057833/ticket-queue')
 
+
+# =========================================
+# DYNAMODB CONFIGURATION
+# =========================================
+
+dynamodb = boto3.resource(
+    'dynamodb',
+    region_name='us-east-1'
+)
+
+users_table = dynamodb.Table('Users')
+
+tickets_table = dynamodb.Table('Tickets')
 # =========================================
 # MAIN DASHBOARD UI
 # =========================================
@@ -540,6 +557,42 @@ html = """
 @app.route('/')
 def home():
     return html
+
+# =========================================
+# SIGNUP PAGE
+# =========================================
+
+@app.route('/signup')
+def signup():
+    return render_template('signup.html')
+# =========================================
+# REGISTER USER
+# =========================================
+
+@app.route('/register', methods=['POST'])
+def register():
+
+    name = request.form['name']
+    email = request.form['email']
+    password = request.form['password']
+
+    response = users_table.get_item(
+        Key={'email': email}
+    )
+
+    if 'Item' in response:
+        return "User already exists"
+
+    users_table.put_item(
+        Item={
+            'email': email,
+            'name': name,
+            'password_hash': generate_password_hash(password),
+            'role': 'User'
+        }
+    )
+
+    return redirect('/login')
 
 
 @app.route('/login', methods=['GET', 'POST'])
