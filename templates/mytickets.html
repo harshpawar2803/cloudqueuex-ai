@@ -5,11 +5,28 @@
 </head>
 <body style="background:#0f172a;color:white;font-family:Arial;padding:40px;">
 
+
 <h1>🎫 My Tickets</h1>
 
-<h3>{{ email }}</h3>
+<div style="margin-bottom:20px;">
+
+    <span>
+        👤 Welcome, {{ session.email }}
+    </span>
+    
+    &nbsp;&nbsp;&nbsp;
+
+    <a href="/logout" style="color:#38bdf8;">Logout</a>
+    <a href="/profile" style="color:#38bdf8;">Profile</a>
+
+
+    
+
+</div>
 
 <hr>
+
+
 
 {% for ticket in tickets %}
 

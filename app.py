@@ -553,9 +553,12 @@ html = """
 # HOME PAGE
 # =========================================
 
-
 @app.route('/')
 def home():
+
+    if 'email' not in session:
+        return redirect('/login')
+
     return html
 
 
@@ -576,7 +579,7 @@ def signup():
 def register():
 
     name = request.form['name']
-    email = request.form['email']
+    email = session['email']
     password = request.form['password']
 
     response = users_table.get_item(
@@ -655,6 +658,24 @@ def mytickets():
         tickets=user_tickets,
         email=session['email']
     )
+
+
+@app.route('/profile')
+def profile():
+
+    if 'email' not in session:
+        return redirect('/login')
+
+    response = users_table.get_item(
+        Key={'email': session['email']}
+    )
+
+    return render_template(
+        'profile.html',
+        user=response['Item']
+    )
+
+
 
 @app.route('/search')
 def search():
@@ -932,6 +953,9 @@ def support():
 
 @app.route('/submit', methods=['POST'])
 def submit():
+
+    if 'email' not in session:
+    return redirect('/login')
 
     try:
         ticket_id = str(uuid.uuid4())
