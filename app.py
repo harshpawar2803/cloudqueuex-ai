@@ -552,6 +552,9 @@ html = """
 # =========================================
 # HOME PAGE
 # =========================================
+@app.route('/health')
+def health():
+    return "OK", 200
 
 @app.route('/')
 def home():
