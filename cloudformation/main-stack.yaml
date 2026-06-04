@@ -25,6 +25,8 @@ Resources:
 
       GroupDescription: Allow SSH and Flask Access
 
+      VpcId: vpc-0b86720653529edf6
+
       SecurityGroupIngress:
 
         - IpProtocol: tcp
@@ -40,6 +42,23 @@ Resources:
   # ==========================================
   # IAM ROLE
   # ==========================================
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+
+    Properties:
+
+      GroupDescription: ALB Security Group
+
+      VpcId: vpc-0b86720653529edf6
+
+      SecurityGroupIngress:
+
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
 
   TicketEC2Role:
     Type: AWS::IAM::Role
@@ -176,6 +195,8 @@ Resources:
 
       InstanceType: t2.micro
 
+      SubnetId: subnet-0a6140334ac6bda1b
+
       ImageId: !Sub '{{resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64}}'
 
       KeyName: !Ref KeyPairName
@@ -210,6 +231,62 @@ Resources:
 
           echo "CloudQueueX AI Ready" > /opt/cloudqueuex/status.txt
 
+
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+
+    Properties:
+
+      Name: CloudQueueX-ALB
+
+      Scheme: internet-facing
+
+      Type: application
+
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+
+      Subnets:
+        - subnet-0a6140334ac6bda1b
+        - subnet-0aef3e728040c95f8
+
+  ALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+
+    Properties:
+
+      Name: CloudQueueX-TG
+
+      Port: 5000
+
+      Protocol: HTTP
+
+      VpcId: vpc-0b86720653529edf6
+
+      HealthCheckPath: /
+
+      TargetType: instance
+
+      Targets:
+        - Id: !Ref TicketEC2
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+
+    Properties:
+
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+
+      Port: 80
+
+      Protocol: HTTP
+
+      DefaultActions:
+
+        - Type: forward
+
+          TargetGroupArn: !Ref ALBTargetGroup
+
 Outputs:
 
   EC2PublicIP:
@@ -241,3 +318,8 @@ Outputs:
     Description: CloudWatch Log Group
 
     Value: !Ref TicketLogGroup
+
+  ALBDNSName:
+    Description: Application Load Balancer DNS
+
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
