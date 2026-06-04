@@ -635,6 +635,27 @@ def login():
 
     return render_template('login.html')
 
+@app.route('/mytickets')
+def mytickets():
+
+    if 'email' not in session:
+        return redirect('/login')
+
+    response = tickets_table.scan()
+
+    user_tickets = []
+
+    for item in response.get('Items', []):
+
+        if item.get('email') == session['email']:
+            user_tickets.append(item)
+
+    return render_template(
+        'mytickets.html',
+        tickets=user_tickets,
+        email=session['email']
+    )
+
 @app.route('/search')
 def search():
     return render_template('search.html')

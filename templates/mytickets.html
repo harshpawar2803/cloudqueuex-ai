@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Tickets</title>
+</head>
+<body style="background:#0f172a;color:white;font-family:Arial;padding:40px;">
+
+<h1>🎫 My Tickets</h1>
+
+<h3>{{ email }}</h3>
+
+<hr>
+
+{% for ticket in tickets %}
+
+<div style="background:#111827;padding:20px;margin:15px;border-radius:10px;">
+
+    <h3>{{ ticket.subject }}</h3>
+
+    <p><b>Ticket ID:</b> {{ ticket.ticket_id }}</p>
+
+    <p><b>Team:</b> {{ ticket.team }}</p>
+
+    <p><b>Status:</b> {{ ticket.status }}</p>
+
+</div>
+
+{% endfor %}
+
+</body>
+</html>
