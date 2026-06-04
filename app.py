@@ -675,7 +675,23 @@ def profile():
         user=response['Item']
     )
 
+@app.route('/admin')
+def admin():
 
+    if 'email' not in session:
+        return redirect('/login')
+
+    if session.get('role') != 'Admin':
+        return "Access Denied", 403
+
+    response = tickets_table.scan()
+
+    tickets = response.get('Items', [])
+
+    return render_template(
+        'admin.html',
+        tickets=tickets
+    )
 
 @app.route('/search')
 def search():
