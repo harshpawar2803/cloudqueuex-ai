@@ -950,31 +950,28 @@ def support():
 # =========================================
 # SUBMIT ROUTE
 # =========================================
-
 @app.route('/submit', methods=['POST'])
 def submit():
+
     if 'email' not in session:
-        
-        
-        
         return redirect('/login')
 
     try:
+
         ticket_id = str(uuid.uuid4())
 
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         name = request.form['name']
 
-        email = request.form['email']
+        # Logged-in user email
+        email = session['email']
 
         team = request.form['team']
 
         subject = request.form['subject']
 
         issue = request.form['issue']
-
-        # SEND MESSAGE TO SQS
 
         sqs.send_message(
 
@@ -983,17 +980,11 @@ def submit():
             MessageBody=json.dumps({
 
                 'ticket_id': ticket_id,
-
                 'name': name,
-
                 'email': email,
-
                 'team': team,
-
                 'subject': subject,
-
                 'issue': issue,
-
                 'timestamp': timestamp
 
             })
@@ -1015,13 +1006,9 @@ def submit():
             <br>
 
             <h3>Name: {name}</h3>
-
             <h3>Email: {email}</h3>
-
             <h3>Team: {team}</h3>
-
             <h3>Subject: {subject}</h3>
-
             <h3>Timestamp: {timestamp}</h3>
 
             <br>
@@ -1039,18 +1026,29 @@ def submit():
         </body>
 
         """
-    
+
     except Exception as e:
+
         print(f"Error submitting ticket: {str(e)}")
+
         return f"""
+
         <body style="background:#0f172a;color:white;font-family:Arial;text-align:center;padding-top:80px;">
+
             <h1>❌ Error Submitting Ticket</h1>
-            <p style="color:#ef4444;font-size:18px;">{str(e)}</p>
+
+            <p style="color:#ef4444;font-size:18px;">
+                {str(e)}
+            </p>
+
             <br>
+
             <a href="/" style="color:#38bdf8;font-size:20px;text-decoration:none;">
                 ← Back to Dashboard
             </a>
+
         </body>
+
         """, 500
 
 # =========================================
