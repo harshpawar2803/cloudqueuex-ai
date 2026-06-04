@@ -263,7 +263,7 @@ Resources:
 
       VpcId: vpc-0b86720653529edf6
 
-      HealthCheckPath: /
+      HealthCheckPath: /health
 
       TargetType: instance
 
