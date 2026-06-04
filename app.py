@@ -579,7 +579,7 @@ def signup():
 def register():
 
     name = request.form['name']
-    email = session['email']
+    email = request.form['email']
     password = request.form['password']
 
     response = users_table.get_item(
@@ -953,9 +953,11 @@ def support():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-
     if 'email' not in session:
-    return redirect('/login')
+        
+        
+        
+        return redirect('/login')
 
     try:
         ticket_id = str(uuid.uuid4())
