@@ -779,7 +779,7 @@ def architecture():
 
     <body style='background:#0f172a;color:white;font-family:Arial;padding:50px;'>
 
-    <h1>☁️ CloudQueueX AI Architecture</h1>
+    <h1>☁️ CloudQueueX AI - System Architecture</h1>
 
     <br><br>
 
@@ -791,17 +791,15 @@ User
  ↓
 Application Load Balancer
  ↓
-EC2 Flask Frontend
+EC2 Flask Application
  ↓
 Amazon SQS Queue
  ↓
 Worker Service
  ↓
-OpenAI AI Analysis
+Amazon DynamoDB
  ↓
-DynamoDB Storage
- ↓
-SNS Email Notifications
+Amazon SNS Email Notifications
 
     </pre>
 
@@ -811,21 +809,19 @@ SNS Email Notifications
 
     <ul style='line-height:2;font-size:18px;'>
 
-        <li>Amazon EC2</li>
+        <li>Amazon EC2 - Application Hosting</li>
 
-        <li>Amazon SQS</li>
+        <li>Amazon SQS - Ticket Queue Processing</li>
 
-        <li>Amazon DynamoDB</li>
+        <li>Amazon DynamoDB - Data Storage</li>
 
-        <li>Amazon SNS</li>
+        <li>Amazon SNS - Email Notifications</li>
 
-        <li>AWS IAM</li>
+        <li>AWS IAM - Access Management</li>
 
-        <li>AWS CloudFormation</li>
+        <li>AWS CloudFormation - Infrastructure Automation</li>
 
-        <li>Application Load Balancer</li>
-
-        <li>OpenAI API</li>
+        <li>Application Load Balancer - Traffic Distribution</li>
 
     </ul>
 
@@ -838,82 +834,6 @@ SNS Email Notifications
     </body>
 
     """
-
-# =========================================
-# SERVICES PAGE
-# =========================================
-
-@app.route('/services')
-def services():
-
-    return """
-
-    <body style='background:#0f172a;color:white;font-family:Arial;padding:50px;'>
-
-    <h1>🚀 AWS Services Used</h1>
-
-    <br><br>
-
-    <table border='1' cellpadding='15'
-    style='border-collapse:collapse;font-size:18px;'>
-
-        <tr>
-            <th>Service</th>
-            <th>Purpose</th>
-        </tr>
-
-        <tr>
-            <td>EC2</td>
-            <td>Hosts Flask frontend application</td>
-        </tr>
-
-        <tr>
-            <td>SQS</td>
-            <td>Asynchronous ticket queue</td>
-        </tr>
-
-        <tr>
-            <td>DynamoDB</td>
-            <td>Stores ticket records</td>
-        </tr>
-
-        <tr>
-            <td>SNS</td>
-            <td>Email notifications</td>
-        </tr>
-
-        <tr>
-            <td>IAM</td>
-            <td>Secure AWS service permissions</td>
-        </tr>
-
-        <tr>
-            <td>CloudFormation</td>
-            <td>Infrastructure as Code</td>
-        </tr>
-
-        <tr>
-            <td>ALB</td>
-            <td>Load balancing and scalability</td>
-        </tr>
-
-        <tr>
-            <td>OpenAI</td>
-            <td>AI-powered ticket analysis</td>
-        </tr>
-
-    </table>
-
-    <br><br>
-
-    <a href='/' style='color:#38bdf8;font-size:20px;text-decoration:none;'>
-        ← Back to Dashboard
-    </a>
-
-    </body>
-
-    """
-
 # =========================================
 # SUPPORT PAGE
 # =========================================
