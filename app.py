@@ -1,6 +1,6 @@
 from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, request, render_template, redirect
+from flask import Flask, request, render_template, redirect, jsonify
 import boto3
 import json
 import uuid
@@ -691,9 +691,22 @@ def admin():
 
     tickets = response.get('Items', [])
 
+    users_response = users_table.scan()
+    users = users_response.get('Items', [])
+
+    total_users = len(users)
+    total_tickets = len(tickets)
+    open_tickets = len([
+        t for t in tickets
+        if t.get('status', 'OPEN').upper() == 'OPEN'
+    ])
+
     return render_template(
         'admin.html',
-        tickets=tickets
+        tickets=tickets,
+        total_users=total_users,
+        total_tickets=total_tickets,
+        open_tickets=open_tickets
     )
 
 @app.route('/search')
@@ -743,9 +756,114 @@ def dashboard():
 
     return render_template(
         'dashboard.html',
-        email=session['email'],
-        role=session['role']
+        email=session.get('email'),
+        role=session.get('role', 'User')
     )
+
+@app.route('/api/dashboard')
+def api_dashboard():
+
+    if 'email' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    response = tickets_table.scan()
+    tickets = response.get('Items', [])
+
+    counts = {
+        'open': 0,
+        'assigned': 0,
+        'resolved': 0,
+        'operators': 0,
+        'total': len(tickets)
+    }
+
+    for item in tickets:
+        status = item.get('status', '').lower()
+        if status == 'open':
+            counts['open'] += 1
+        elif status == 'assigned':
+            counts['assigned'] += 1
+        elif status == 'resolved':
+            counts['resolved'] += 1
+
+    # Use unique assigned agents count if the ticket model includes operator assignment
+    operators = set()
+    for item in tickets:
+        assignee = item.get('assigned') or item.get('email')
+        if assignee:
+            operators.add(assignee)
+
+    counts['operators'] = len(operators)
+
+    payload = {
+        'counts': counts,
+        'tickets': [
+            {
+                'id': item.get('ticket_id', item.get('id', 'N/A')),
+                'priority': item.get('priority', 'Medium'),
+                'category': item.get('category', 'General'),
+                'title': item.get('subject', item.get('issue', 'No summary available')),
+                'status': item.get('status', 'open'),
+                'assigned': item.get('assigned', item.get('email', 'Unassigned'))
+            }
+            for item in tickets
+        ]
+    }
+
+    return jsonify(payload)
+
+@app.route('/ticket/<ticket_id>')
+def ticket_by_id(ticket_id):
+
+    if 'email' not in session:
+        return redirect('/login')
+
+    try:
+        response = tickets_table.get_item(Key={'ticket_id': ticket_id})
+
+        if 'Item' not in response:
+            return render_template('ticket_details.html',
+                ticket_id=ticket_id,
+                status='UNKNOWN',
+                category='General',
+                priority='Medium',
+                summary='Ticket not found.',
+                name='N/A',
+                email='N/A',
+                team='N/A',
+                issue='N/A',
+                ai_analysis='No analysis available'
+            )
+
+        ticket = response['Item']
+
+        return render_template('ticket_details.html',
+            ticket_id=ticket.get('ticket_id', 'N/A'),
+            status=ticket.get('status', 'UNKNOWN'),
+            category=ticket.get('category', 'Infrastructure'),
+            priority=ticket.get('priority', 'Medium'),
+            summary=ticket.get('subject', ticket.get('issue', 'No summary available')),
+            name=ticket.get('name', 'N/A'),
+            email=ticket.get('email', 'N/A'),
+            team=ticket.get('team', 'N/A'),
+            issue=ticket.get('issue', 'N/A'),
+            ai_analysis=ticket.get('ai_analysis', 'No analysis yet')
+        )
+
+    except Exception as e:
+        print(f"Error loading ticket {ticket_id}: {str(e)}")
+        return render_template('ticket_details.html',
+            ticket_id=ticket_id,
+            status='ERROR',
+            category='General',
+            priority='Medium',
+            summary=f'Unable to load ticket: {str(e)}',
+            name='N/A',
+            email='N/A',
+            team='N/A',
+            issue='N/A',
+            ai_analysis='No analysis available'
+        )
 
 @app.route('/logout')
 def logout():

@@ -33,29 +33,29 @@
         <div class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-info">
-                    <span class="metric-label">Active Incidents</span>
-                    <span class="metric-value" id="count-open">12</span>
+                    <span class="metric-label">Open Tickets</span>
+                    <span class="metric-value" id="count-open">0</span>
                 </div>
                 <div class="metric-icon-box total">🔥</div>
             </div>
             <div class="metric-card">
                 <div class="metric-info">
                     <span class="metric-label">Assigned Tickets</span>
-                    <span class="metric-value" id="count-assigned">5</span>
+                    <span class="metric-value" id="count-assigned">0</span>
                 </div>
                 <div class="metric-icon-box open">🛡️</div>
             </div>
             <div class="metric-card">
                 <div class="metric-info">
-                    <span class="metric-label">Resolved Operations</span>
-                    <span class="metric-value" id="count-resolved">25</span>
+                    <span class="metric-label">Resolved Tickets</span>
+                    <span class="metric-value" id="count-resolved">0</span>
                 </div>
                 <div class="metric-icon-box resolved">✔️</div>
             </div>
             <div class="metric-card">
                 <div class="metric-info">
-                    <span class="metric-label">Console Operators</span>
-                    <span class="metric-value" id="count-operators">10</span>
+                    <span class="metric-label">Support Agents</span>
+                    <span class="metric-value" id="count-operators">0</span>
                 </div>
                 <div class="metric-icon-box critical">👥</div>
             </div>
@@ -68,7 +68,7 @@
             <div>
                 <!-- Ticket Board / Queue List Card -->
                 <div class="glass-card" style="padding: 24px;">
-                    <h3 class="card-title">📋 Active Incident Triage Queue</h3>
+                    <h3 class="card-title">📋 Open Ticket Queue</h3>
                     <div class="table-responsive">
                         <table class="custom-table">
                             <thead>
@@ -89,26 +89,23 @@
                     </div>
                 </div>
 
-                <!-- Simulation Tools -->
+                <!-- Dashboard Refresh Control -->
                 <div class="glass-card" style="padding: 24px;">
-                    <h3 class="card-title">⚙️ Incident Queue Simulator</h3>
+                    <h3 class="card-title">⚙️ Real-time Dashboard Refresh</h3>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 16px;">
-                        Add mock incident traffic to test message dispatch queue scalability and AI classification.
+                        Fetch current ticket status and metrics from the live system.
                     </p>
                     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                        <input type="number" id="generate-count" class="form-control" style="width: 80px; padding: 8px 12px; text-align: center;" value="10" min="1" max="50">
-                        <button class="btn-primary" id="btn-generate-tickets" style="padding: 10px 20px; font-size: 0.85rem;">
-                            Generate Load
+                        <button class="btn-primary" id="btn-refresh-dashboard" style="padding: 10px 20px; font-size: 0.95rem;">
+                            Refresh Now
                         </button>
-                        <button class="btn-secondary" id="btn-reset-lab" style="padding: 10px 20px; font-size: 0.85rem;">
-                            Reset Board
-                        </button>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Auto-refresh every 10 seconds.</span>
                     </div>
                 </div>
 
                 <!-- Operator Accounts Card -->
                 <div class="glass-card" style="padding: 24px;">
-                    <h3 class="card-title">🛡️ Active Operator Credentials</h3>
+                    <h3 class="card-title">🛡️ Assigned Operators</h3>
                     <div class="table-responsive">
                         <table class="custom-table" style="font-size: 0.8rem;">
                             <thead>

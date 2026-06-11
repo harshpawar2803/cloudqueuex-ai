@@ -1,200 +1,119 @@
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // ==========================================
-    // SEED INITIAL TICKETS IF NOT PRESENT
-    // ==========================================
-    const defaultTickets = [
-        {
-            id: "#1001",
-            priority: "High",
-            category: "Service",
-            title: "SSH service down on practice server",
-            status: "open",
-            assigned: "operator01",
-            score: 0
-        },
-        {
-            id: "#1002",
-            priority: "Medium",
-            category: "Firewall",
-            title: "Security group block on API port",
-            status: "open",
-            assigned: "operator02",
-            score: 0
-        }
-    ];
-
-    function getTickets() {
-        const stored = localStorage.getItem('cqx_tickets');
-        if (!stored) {
-            localStorage.setItem('cqx_tickets', JSON.stringify(defaultTickets));
-            return defaultTickets;
-        }
-        return JSON.parse(stored);
-    }
-
-    function saveTickets(tickets) {
-        localStorage.setItem('cqx_tickets', JSON.stringify(tickets));
-    }
 
     // ==========================================
-    // METRICS COUNT CALCULATION
+    // LIVE DASHBOARD DATA FETCHING
     // ==========================================
-    function updateMetrics() {
-        const tickets = getTickets();
-        
-        let openCount = 0;
-        let assignedCount = 0;
-        let resolvedCount = 0;
-        
-        tickets.forEach(t => {
-            const s = t.status.toLowerCase();
-            if (s === 'open') openCount++;
-            else if (s === 'assigned') assignedCount++;
-            else if (s === 'resolved') resolvedCount++;
+    async function fetchDashboardData() {
+        const response = await fetch('/api/dashboard', {
+            headers: {
+                'Accept': 'application/json'
+            }
         });
 
+        if (response.status === 401) {
+            window.location = '/login';
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error('Unable to load dashboard data');
+        }
+
+        return response.json();
+    }
+
+    function updateMetrics(counts) {
         const openEl = document.getElementById('count-open');
         const assignedEl = document.getElementById('count-assigned');
         const resolvedEl = document.getElementById('count-resolved');
         const opsEl = document.getElementById('count-operators');
 
-        if (openEl) openEl.innerText = openCount;
-        if (assignedEl) assignedEl.innerText = assignedCount;
-        if (resolvedEl) resolvedEl.innerText = resolvedCount;
-        if (opsEl) opsEl.innerText = "10"; 
+        if (openEl) openEl.innerText = counts.open || 0;
+        if (assignedEl) assignedEl.innerText = counts.assigned || 0;
+        if (resolvedEl) resolvedEl.innerText = counts.resolved || 0;
+        if (opsEl) opsEl.innerText = counts.operators || 0;
     }
 
-    // ==========================================
-    // RENDER TICKETS TABLE
-    // ==========================================
-    function renderTicketsTable() {
+    function renderTicketsTable(tickets) {
         const tbody = document.getElementById('tickets-table-body');
         if (!tbody) return;
 
-        const tickets = getTickets();
         tbody.innerHTML = '';
 
-        if (tickets.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No incidents currently reported in queue.</td></tr>`;
+        if (!tickets || tickets.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">No open tickets found in the system.</td></tr>`;
             return;
         }
 
         tickets.forEach(t => {
             const tr = document.createElement('tr');
-            
-            // Priority badge styling matching style.css
             let priorityClass = 'low';
-            if (t.priority.toLowerCase() === 'high') priorityClass = 'high';
-            else if (t.priority.toLowerCase() === 'medium') priorityClass = 'medium';
+            if (t.priority && t.priority.toLowerCase() === 'high') priorityClass = 'high';
+            else if (t.priority && t.priority.toLowerCase() === 'medium') priorityClass = 'medium';
+
+            const statusClass = t.status && t.status.toLowerCase() === 'open' ? 'critical' : 'active';
 
             tr.innerHTML = `
                 <td style="font-family: monospace; color: var(--info); font-weight: 600;">${t.id}</td>
-                <td><span class="prio-badge ${priorityClass}">${t.priority}</span></td>
-                <td style="font-size: 0.85rem; font-weight: 500;">${t.category}</td>
-                <td><a href="/ticket-demo" style="color: #ffffff; text-decoration: none; font-weight: 500; transition: color 0.15s ease;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='#ffffff'">${t.title}</a></td>
+                <td><span class="prio-badge ${priorityClass}">${t.priority || 'Medium'}</span></td>
+                <td style="font-size: 0.85rem; font-weight: 500;">${t.category || 'General'}</td>
+                <td><a href="/ticket/${encodeURIComponent(t.id)}" style="color: #ffffff; text-decoration: none; font-weight: 500; transition: color 0.15s ease;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='#ffffff'">${t.title || 'No summary available'}</a></td>
                 <td>
                     <div class="status-indicator">
-                        <span class="status-dot ${t.status.toLowerCase() === 'open' ? 'critical' : 'active'}"></span>
-                        <span style="font-size: 0.8rem; text-transform: uppercase;">${t.status}</span>
+                        <span class="status-dot ${statusClass}"></span>
+                        <span style="font-size: 0.8rem; text-transform: uppercase;">${t.status || 'OPEN'}</span>
                     </div>
                 </td>
-                <td style="font-family: monospace; font-size: 0.85rem;">${t.assigned || '-'}</td>
+                <td style="font-family: monospace; font-size: 0.85rem;">${t.assigned || 'Unassigned'}</td>
                 <td>
-                    <button class="btn-action-small danger btn-break-machine" data-id="${t.id}">Break Node</button>
+                    <a href="/ticket/${encodeURIComponent(t.id)}" class="btn-action-small primary" style="text-decoration:none; display:inline-block; width:100%; text-align:center;">View</a>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-
-        // Attach break machine simulator
-        document.querySelectorAll('.btn-break-machine').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const ticketId = e.target.getAttribute('data-id');
-                triggerMachineBreak(ticketId);
-            });
-        });
     }
+
+    async function refreshDashboard() {
+        try {
+            const data = await fetchDashboardData();
+            if (!data) return;
+
+            updateMetrics(data.counts || {});
+            renderTicketsTable(data.tickets || []);
+            addTerminalLog(`[INFO] Dashboard refreshed with live ticket data.`, 'info');
+        } catch (error) {
+            console.error(error);
+            addTerminalLog(`Unable to load live dashboard data.`, 'error');
+        }
+    }
+
+    const btnRefresh = document.getElementById('btn-refresh-dashboard');
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', refreshDashboard);
+    }
+
+    refreshDashboard();
+    setInterval(refreshDashboard, 10000);
+
+    // ==========================================
+    // METRICS COUNT CALCULATION
+    // ==========================================
+    // This section is intentionally left empty because live data comes from the backend.
+
+    // ==========================================
+    // RENDER TICKETS TABLE
+    // ==========================================
+    // Rendering is handled by the live fetch path above.
 
     // ==========================================
     // NODE BREAK SIMULATION (Spikes graphs & alerts)
     // ==========================================
-    function triggerMachineBreak(ticketId) {
-        if (window.cpuChart && window.memChart) {
-            const time = new Date().getTime();
-            window.cpuData.push({ x: time, y: 97 });
-            window.memData.push({ x: time, y: 94 });
-            window.cpuChart.updateSeries([{ data: window.cpuData }]);
-            window.memChart.updateSeries([{ data: window.memData }]);
-        }
-
-        // Post critical warnings to console logs
-        addTerminalLog(`[CRITICAL] System failure alarm triggered for node associated with Ticket ${ticketId}!`, 'error');
-        addTerminalLog(`[WARN] CPU usage spiked to 97% on telemetry tracker.`, 'warn');
-        addTerminalLog(`[ERROR] Daemon: Connection reset by peer on target socket sshd.`, 'error');
-
-        alert(`Critical alarm triggered for Ticket ${ticketId}. Server resource allocation spiked to maximum! Check live charts.`);
-    }
+    // The simulator logic has been removed to focus on real ticket management.
 
     // ==========================================
     // GENERATOR ACTIONS
     // ==========================================
-    const presets = [
-        { priority: "High", category: "Service", title: "SSH service down on practice server" },
-        { priority: "High", category: "Web", title: "Apache web service not responding" },
-        { priority: "Medium", category: "Firewall", title: "Firewall blocks web application port" },
-        { priority: "High", category: "Storage", title: "Disk usage alert generated" },
-        { priority: "Medium", category: "Permission", title: "Wrong permission on shared directory" },
-        { priority: "Medium", category: "User Management", title: "User account locked" },
-        { priority: "Low", category: "Service", title: "Cron service stopped" },
-        { priority: "High", category: "SELinux", title: "SELinux context issue on web file" },
-        { priority: "High", category: "Network", title: "NetworkManager service inactive" },
-        { priority: "Medium", category: "Security", title: "Failed login report investigation" },
-        { priority: "Medium", category: "Permission", title: "Wrong owner on application directory" },
-        { priority: "Low", category: "Package", title: "Package missing: tar" }
-    ];
-
-    const btnGenerate = document.getElementById('btn-generate-tickets');
-    if (btnGenerate) {
-        btnGenerate.addEventListener('click', () => {
-            const countInput = document.getElementById('generate-count');
-            const count = countInput ? parseInt(countInput.value) || 1 : 10;
-            
-            const tickets = getTickets();
-            
-            for (let i = 0; i < count; i++) {
-                const randomPreset = presets[Math.floor(Math.random() * presets.length)];
-                const randomId = "#" + Math.floor(1000 + Math.random() * 9000);
-                const randomOperator = "operator0" + (1 + Math.floor(Math.random() * 3));
-                
-                tickets.push({
-                    id: randomId,
-                    priority: randomPreset.priority,
-                    category: randomPreset.category,
-                    title: randomPreset.title,
-                    status: "open",
-                    assigned: randomOperator,
-                    score: 0
-                });
-            }
-
-            saveTickets(tickets);
-            updateMetrics();
-            renderTicketsTable();
-            addTerminalLog(`[INFO] Generated ${count} mock operational incidents into queue.`, 'info');
-        });
-    }
-
-    const btnReset = document.getElementById('btn-reset-lab');
-    if (btnReset) {
-        btnReset.addEventListener('click', () => {
-            localStorage.removeItem('cqx_tickets');
-            updateMetrics();
-            renderTicketsTable();
-            addTerminalLog(`[INFO] Active console reset. Queue flushed successfully.`, 'info');
-            alert("Incidents board reset.");
-        });
-    }
+    // The fake ticket generator has been removed from the live dashboard.
 
     // ==========================================
     // LOG CONSOLE TERMINAL
